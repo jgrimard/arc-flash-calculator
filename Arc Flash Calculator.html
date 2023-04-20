@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<!--
+IEEE 1584-2018 BASED ARC FLASH CALCULATOR
+Jason Grimard
+NOT FULLY TESTED, USE AT YOUR OWN RISK
+Version 0.02 Alpha
+
+TO DO:
+*** MORE TESTING
+*** 
+
+MIT License
+
+Copyright (c) [2023] [Jason Grimard]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html>
+	<head>
+		<title>Arc Flash Calculator</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style type="text/css"> 
+		.error {
+			 color: red;
+		}
+		.container {
+			 display: flex;
+			 justify-content: center;
+			 width: 100%;
+			 height: auto;
+		}
+		 .form {
+			 display: flex;
+			 flex-direction: column;
+			 align-items: center;
+			 padding: 20px;
+			 border: 1px solid black;
+			 border-radius: 5px;
+		}
+		 div.inputs {
+			 display:grid;
+			 grid-template-columns: auto auto auto;
+			 grid-gap: 3px;
+			 align-items: center;
+		 }
+		 div.inputs label.prelabel { 
+			 text-align:right;
+			 }
+		 div.inputs label.postlabel { 
+			 text-align:left;
+			 }
+		 .form input[type=text], select {
+			 width: 80px;
+			 height: 25px;
+			 border: 1px solid black;
+			 border-radius: 5px;
+			 margin: 5px 0;
+			 padding: 0 10px;
+			 box-sizing: border-box;
+		}
+		 .form input[type=button] {
+			 width: 50%;
+			 height: 35px;
+			 border: 1px solid black;
+			 border-radius: 5px;
+			 margin: 10px 0;
+			 background-color: #333;
+			 color: white;
+			 cursor: pointer;
+		}
+		 .results p{
+			 margin: 5px;
+		 }
+		 .steps p{
+			 margin: 5px;
+		 }
+		 #title {	
+			font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+		 	text-align: center;
+			font-size: 30px;
+			margin: 5px;			 
+		}
+		 #version {
+			 text-align: center;
+			 font-size: 10px;
+			 margin: 5px;
+		}
+		#warning {
+			 text-align: center;
+			 font-size: 12px;
+			 margin: 5px;
+			 color: red
+		}
+		</style>
+	</head>
+	<body>
+		<h1 id="title"> Arc Flash Calculator</h1>
+		<p id="version">Version 0.02 Alpha</p>
+		<p id="warning">(NOT FULLY TESTED, USE AT YOUR OWN RISK)</p>
+		<div class="container">
+			<form class="form">
+				<div class="inputs">
+					<label class="prelabel">Secondary Voltage:</label>
+					<input type="text" id="sec_v">
+					<label class="postlabel">V</label>
+					<label class="prelabel">Bolted Fault Current:</label>
+					<input type="text" id="I_bf">
+					<label class="postlabel">kA</label>
+					<label class="prelabel">Electrode Configuration:</label>
+					<select name="ec" id="ec">
+						<option value="VCB">VCB</option>
+						<option value="VCBB">VCBB</option>
+						<option value="HCB">HCB</option>
+						<option value="VOA">VOA</option>
+						<option value="HOA">HOA</option>
+					</select>
+					<label class="postlabel">Selection</label>
+					<label class="prelabel">Conductor Gap:</label>
+					<input type="text" id="G">
+					<label class="postlabel">mm</label>
+					<label class="prelabel">Working Distance:</label>
+					<input type="text" id="D">
+					<label class="postlabel">mm</label>
+					<label class="prelabel">Box Width:</label>
+					<input type="text" id="width">
+					<label class="postlabel">mm</label>
+					<label class="prelabel">Box Height:</label>
+					<input type="text" id="height">
+					<label class="postlabel">mm</label>
+					<label class="prelabel">Box Depth:</label>
+					<input type="text" id="depth">
+					<label class="postlabel">mm</label>
+					<label class="prelabel">Arc Time:</label>
+					<input type="text" id="T">
+					<label class="postlabel">ms</label>
+				</div>
+
+				<input type="button" value="Calculate" onclick="calculate()" id="calculate_btn">
+				
+				<div class="errors">
+					<p id="error" class="error">Error:</p>
+					<p id="volt_error" class="error">Voltage must be between 208 and 15000</p>
+					<p id="I_bf_error" class="error">Bolted Fault Current out of range for IEEE 1584-2018<br>
+													Results are not be accurate<br>
+													208V - 600V: 500A to 106kA<br>
+													601V - 15kV: 200A to 65kA</p>
+				</div>
+				
+				<div class="results" id="results">
+					<p id="E_cal">Incident Energy:</p>
+					<p id="AFB_ftin">Arc Flash Boundry:</p>
+				</div>
+
+				<input type="button" value="Show Steps" id="stepsBtn">
+				
+				<div class="steps" id="steps">
+					<p id="Etype">Etype:</p>
+					<p id="A">A:</p>
+					<p id="B">B:</p>
+					<p id="width_capped">width_capped:</p>
+					<p id="height_capped">height_capped:</p>
+					<p id="EQ_11">EQ_11:</p>
+					<p id="EQ_12">EQ_12:</p>
+					<p id="EQ_11_capped">EQ_11_capped:</p>
+					<p id="EQ_12_capped">EQ_12_capped:</p>
+					<p id="width_1">width_1:</p>
+					<p id="height_1">height_1:</p>
+					<p id="EES">EES:</p>
+					<p id="Eq_14">Eq_14:</p>
+					<p id="Eq_15">Eq_15:</p>
+					<p id="CF">CF:</p>
+					<p id="I_arc600">I_arc600:</p>
+					<p id="I_arc2700">I_arc2700:</p>
+					<p id="I_arc14300">I_arc14300:</p>
+					<p id="I_arc_LT600">I_arc_LT600:</p>
+					<p id="I_arc_1">I_arc_1:</p>
+					<p id="I_arc_2">I_arc_2:</p>
+					<p id="I_arc_3">I_arc_3:</p>
+					<p id="I_arc">I_arc:</p>
+					<p id="E_LT600">E_LT600:</p>
+					<p id="E_600">E_600:</p>
+					<p id="E_2700">E_2700:</p>
+					<p id="E_14300">E_14300:</p>
+					<p id="E_1">E_1:</p>
+					<p id="E_2">E_2:</p>
+					<p id="E_3">E_3:</p>
+					<p id="E">E:</p>
+					<p id="AFB_LT600">AFB_LT600:</p>
+					<p id="AFB_600">AFB_600:</p>
+					<p id="AFB_2700">AFB_2700:</p>
+					<p id="AFB_14300">AFB_14300:</p>
+					<p id="AFB_1">AFB_1:</p>
+					<p id="AFB_2">AFB_2:</p>
+					<p id="AFB_3">AFB_3:</p>
+					<p id="AFB">AFB:</p>
+					<p id="AFB_in">AFB:</p>
+					<p id="I_bf_out_of_bounds">Error:</p>
+				</div>
+
+			</form>
+		</div>
+		<script> 
+		// Insert some default test data into inputs
+		document.getElementById("sec_v").value = "480";
+		document.getElementById("I_bf").value = "45";
+		document.getElementById("G").value = "32";
+		document.getElementById("D").value = "609.6";
+		document.getElementById("width").value = "610";
+		document.getElementById("height").value = "610";
+		document.getElementById("depth").value = "254";
+		document.getElementById("T").value = "61.3";
+		
+		// Add event listeners to trigger calculate() when text boxes are changed
+		document.getElementById('sec_v').addEventListener("change", function(e){ calculate() });
+		document.getElementById('I_bf').addEventListener("change", function(e){ calculate() });
+		document.getElementById('ec').addEventListener("change", function(e){ calculate() });
+		document.getElementById('G').addEventListener("change", function(e){ calculate() });
+		document.getElementById('D').addEventListener("change", function(e){ calculate() });
+		document.getElementById('width').addEventListener("change", function(e){ calculate() });
+		document.getElementById('height').addEventListener("change", function(e){ calculate() });
+		document.getElementById('depth').addEventListener("change", function(e){ calculate() });
+		document.getElementById('T').addEventListener("change", function(e){ calculate() });
+
+		// Add event listener to show intermediate calculation steps
+		const stepsBtn = document.getElementById('stepsBtn');
+		const ResultsBox = document.getElementById('steps');
+		ResultsBox.style.display = 'none';
+		stepsBtn.addEventListener('click', () => {
+			if (ResultsBox.style.display === 'none'){
+				ResultsBox.style.display = '';
+				stepsBtn.value = "Hide Steps";
+			} else {
+				ResultsBox.style.display = 'none';
+				stepsBtn.value = "Show Steps";
+			}
+		});
+		
+		function formatNumber(x) {
+			let formattedNumber = parseFloat(x);
+			if (formattedNumber > 1000){
+				formattedNumber = formattedNumber.toFixed(0);
+			} else if (x > 100){
+				formattedNumber = formattedNumber.toFixed(0);
+			} else if  (formattedNumber > 10){
+				formattedNumber = formattedNumber.toFixed(1);
+			}else if (formattedNumber > 1){
+				formattedNumber = formattedNumber.toFixed(2);
+			}else {
+				formattedNumber = formattedNumber.toFixed(3);
+			}
+			return formattedNumber;
+		}
+		
+		function calculate() {
+		let sec_v = parseFloat(document.getElementById("sec_v").value); 
+		let I_bf = parseFloat(document.getElementById("I_bf").value); 
+		let ec = document.getElementById("ec").value; 
+		let G = parseFloat(document.getElementById("G").value); 
+		let D = parseFloat(document.getElementById("D").value); 
+		let width = parseFloat(document.getElementById("width").value); 
+		let height = parseFloat(document.getElementById("height").value); 
+		let depth = parseFloat(document.getElementById("depth").value); 
+		let T = parseFloat(document.getElementById("T").value); 
+		
+		//Etype can be either Typical or Shallow.  
+		let Etype;
+		if (sec_v < 600 && width < 508 && height < 508 && depth <= 203.2){
+			Etype = "Shallow";
+		} else Etype = "Typical";
+		
+		//Enclosure Constant A
+		let A;
+		switch (ec){
+			case "VCB":
+				A = 4;
+				break;
+			case "VCBB":
+				A = 10;
+				break;
+			case "HCB":
+				A = 10;
+				break;
+			default:
+				A = 0;
+		}
+		
+		//Enclosure Constant B
+		let B;
+		switch (ec){
+			case "VCB":
+				B = 20;
+				break;
+			case "VCBB":
+				B = 24;
+				break;
+			case "HCB":
+				B = 22;
+				break;
+			default:
+				B = 0;
+		}
+		
+		//width_capped
+		let width_capped = width;
+		if (width_capped > 1244.6) {
+			width_capped = 1244.6;
+		}
+		
+		//height_capped
+		let height_capped = height;
+		if (height_capped > 1244.6) {
+			height_capped = 1244.6;
+		}
+		
+		//EQ_11
+		let EQ_11 = (660.4 + (width - 660.4) * (sec_v/1000+A)/B)*25.4**-1;
+		if (ec === "VOA" || ec === "HOA") {
+			EQ_11 = 0;
+		}
+
+		//EQ_12
+		let EQ_12 = (660.4 + (height - 660.4) * (sec_v/1000+A)/B)*25.4**-1;
+		if (ec === "VOA" || ec === "HOA") {
+			EQ_12 = 0;
+		}
+
+		//EQ_11_capped
+		let EQ_11_capped = (660.4 + (width_capped - 660.4) * (sec_v/1000+A)/B)*25.4**-1;
+		if (ec === "VOA" || ec === "HOA") {
+			EQ_11_capped = 0;
+		}
+		
+		//EQ_12_capped
+		let EQ_12_capped = (660.4 + (height_capped - 660.4) * (sec_v/1000+A)/B)*25.4**-1;
+		if (ec === "VOA" || ec === "HOA") {
+			EQ_12_capped = 0;
+		}
+		
+		//width_1
+		let width_1;
+		switch (true){
+			case width < 508:
+				if (Etype === "Typical"){
+					width_1 = 20;
+				} else {
+					width_1 = 0.03937*width;
+				}
+				break;
+			case width <= 660.4:
+				width_1 = 0.03937*width
+				break;
+			case width <= 1244.6:
+				width_1 = EQ_11;
+				break;
+			default:
+				width_1 = EQ_11_capped;
+		}
+		
+		//height_1
+		let height_1;
+		switch (true){
+			case height < 508:
+				if (Etype === "Typical"){
+					height_1 = 20;
+				} else {
+					height_1 = 0.03937*height;
+				}
+				break;
+			case height <= 660.4:
+				height_1 = 0.03937*height
+				break;
+			case height <= 1244.6:
+				if (ec === "VCB"){
+					height_1 = 0.03937*height;
+				} else {
+					height_1 = EQ_12;
+				}
+				break;
+			default:
+				if (ec === "VCB"){
+					height_1 = 49;
+				} else {
+					height_1 = EQ_12_capped;
+				}
+		}
+		
+		//EES
+		let EES = (height_1 + width_1) / 2
+		
+		//Eq_14
+		let Eq_14 = 0;
+		if (ec === "VCB" || ec === "VCBB" || ec === "HCB") {
+			const table7TypicalValue = table7Typical.find(item => item.ec === ec)
+			Eq_14 = (table7TypicalValue.b1 * EES**2) + (table7TypicalValue.b2 * EES) + (table7TypicalValue.b3)
+		}
+		
+		//Eq_15
+		let Eq_15 = 0;
+		if (ec === "VCB" || ec === "VCBB" || ec === "HCB") {
+			const table7ShallowValue = table7Shallow.find(item => item.ec === ec)
+			Eq_15 = 1/((table7ShallowValue.b1 * EES**2) + (table7ShallowValue.b2 * EES) + (table7ShallowValue.b3))
+		}
+		
+		//CF
+		let CF = 0;
+		if (ec === "VOA" || ec === "HOA") {
+			CF = 1;
+		} else if (Etype === "Typical") {
+			CF = Eq_14;
+		} else {
+			CF = Eq_15;
+		}
+		
+		//I_arc600
+		//kA
+		const table1Value600 = table1.find(item => item.id === "600"+ec)
+		let I_arc600 = 10**(table1Value600.k1 + table1Value600.k2 * Math.log10(I_bf) + table1Value600.k3 * Math.log10(G)) * (table1Value600.k4 * I_bf**6 +
+		table1Value600.k5 * I_bf**5 + table1Value600.k6 * I_bf**4 + table1Value600.k7 * I_bf**3 + table1Value600.k8 * I_bf**2 + table1Value600.k9 * I_bf +
+		table1Value600.k10);
+		
+		
+		//I_arc2700
+		//kA
+		const table1Value2700 = table1.find(item => item.id === "2700"+ec)
+		let I_arc2700 = 10**(table1Value2700.k1 + table1Value2700.k2 * Math.log10(I_bf) + table1Value2700.k3 * Math.log10(G)) * (table1Value2700.k4 * I_bf**6 +
+		table1Value2700.k5 * I_bf**5 + table1Value2700.k6 * I_bf**4 + table1Value2700.k7 * I_bf**3 + table1Value2700.k8 * I_bf**2 + table1Value2700.k9 * I_bf +
+		table1Value2700.k10);
+		
+		//I_arc14300
+		//kA
+		const table1Value14300 = table1.find(item => item.id === "14300"+ec)
+		let I_arc14300 = 10**(table1Value14300.k1 + table1Value14300.k2 * Math.log10(I_bf) + table1Value14300.k3 * Math.log10(G)) * (table1Value14300.k4 * I_bf**6 +
+		table1Value14300.k5 * I_bf**5 + table1Value14300.k6 * I_bf**4 + table1Value14300.k7 * I_bf**3 + table1Value14300.k8 * I_bf**2 + table1Value14300.k9 * I_bf +
+		table1Value14300.k10);
+		
+		//I_arc_LT600
+		//kA
+		let I_arc_LT600 = 1 / (Math.sqrt(((0.6 / (sec_v/1000))**2) * ((1/I_arc600**2) - ((0.6**2 - (sec_v/1000)**2) / (0.6**2 * I_bf**2)))))
+		
+		//I_arc_1
+		//kA
+		let I_arc_1 = ((I_arc2700 - I_arc600) / 2.1) * ((sec_v/1000)-2.7) + I_arc2700;
+		
+		//I_arc_2
+		//kA
+		let I_arc_2 = ((I_arc14300 - I_arc2700) / 11.6) * ((sec_v/1000)-14.3) + I_arc14300;
+		
+		//I_arc_3
+		//kA
+		let I_arc_3 = ((I_arc_1 * (2.7 - sec_v/1000)) / 2.1) + ((I_arc_2 * (sec_v/1000 - 0.6)) / 2.1);
+		
+		//I_arc
+		//kA
+		let I_arc = 0;
+		if (sec_v > 2700) {
+			I_arc = I_arc_2;
+		} else if (sec_v > 600) {
+			I_arc = I_arc_3;
+		} else {
+			I_arc = I_arc_LT600;
+		}
+		
+		//E_LT600
+		//kA
+		const table3ValueLT600 = table3.find(item => item.ec === ec)
+		let E_LT600 = 12.552 / 50 * T * 10**(table3ValueLT600.k1 + table3ValueLT600.k2 * Math.log10(G) + table3ValueLT600.k3 * I_arc600 / (table3ValueLT600.k4 * I_bf**7 +
+		table3ValueLT600.k5 * I_bf**6 + table3ValueLT600.k6 * I_bf**5 + table3ValueLT600.k7 * I_bf**4 + table3ValueLT600.k8 * I_bf**3 + table3ValueLT600.k9 * I_bf**2 +
+		table3ValueLT600.k10 * I_bf) + table3ValueLT600.k11 * Math.log10(I_bf) + table3ValueLT600.k12 * Math.log10(D) + table3ValueLT600.k13 * Math.log10(I_arc) + Math.log10(1/CF));
+		
+		//E_600
+		//J/cm2
+		const table3Value = table3.find(item => item.ec === ec)
+		let E_600 = 12.552 / 50 * T * 10**(table3Value.k1 + table3Value.k2 * Math.log10(G) + table3Value.k3 * I_arc600 / (table3Value.k4 * I_bf**7 + table3Value.k5 * I_bf**6 +
+		table3Value.k6 * I_bf**5 + table3Value.k7 * I_bf**4 + table3Value.k8 * I_bf**3 + table3Value.k9 * I_bf**2 + table3Value.k10 * I_bf) + table3Value.k11 * Math.log10(I_bf) +
+		table3Value.k12 * Math.log10(D) + table3Value.k13 * Math.log10(I_arc600) + Math.log10(1/CF));
+		
+		//E_2700
+		//J/cm2
+		const table4Value = table4.find(item => item.ec === ec)
+		let E_2700 = 12.552 / 50 * T * 10**(table4Value.k1 + table4Value.k2 * Math.log10(G) + table4Value.k3 * I_arc2700 / (table4Value.k4 * I_bf**7 + table4Value.k5 * I_bf**6 +
+		table4Value.k6 * I_bf**5 + table4Value.k7 * I_bf**4 + table4Value.k8 * I_bf**3 + table4Value.k9 * I_bf**2 + table4Value.k10 * I_bf) + table4Value.k11 * Math.log10(I_bf) +
+		table4Value.k12 * Math.log10(D) + table4Value.k13 * Math.log10(I_arc2700) + Math.log10(1/CF));
+		
+		
+		//E_14300
+		//J/cm2
+		const table5Value = table5.find(item => item.ec === ec)
+		let E_14300 = 12.552 / 50 * T * 10**(table5Value.k1 + table5Value.k2 * Math.log10(G) + table5Value.k3 * I_arc14300 / (table5Value.k4 * I_bf**7 + table5Value.k5 * I_bf**6 +
+		table5Value.k6 * I_bf**5 + table5Value.k7 * I_bf**4 + table5Value.k8 * I_bf**3 + table5Value.k9 * I_bf**2 + table5Value.k10 * I_bf) + table5Value.k11 * Math.log10(I_bf) +
+		table5Value.k12 * Math.log10(D) + table5Value.k13 * Math.log10(I_arc14300) + Math.log10(1/CF));
+		
+		//E_1
+		//J/cm2
+		let E_1 = ((E_2700 - E_600) / 2.1) * ((sec_v/1000) - 2.7) + E_2700;
+		
+		//E_2
+		//J/cm2
+		let E_2 = ((E_14300 - E_2700) / 11.6) * ((sec_v/1000) - 14.3) + E_14300;
+		
+		//E_3
+		//J/cm2
+		let E_3 = ((E_1 * (2.7 - sec_v/1000)) / 2.1) + ((E_2 * (sec_v/1000 - 0.6)) / 2.1);
+		
+		//E
+		//J/cm2
+		let E = 0;
+		if (sec_v > 2700) {
+			E = E_2;
+		} else if (sec_v > 600 ) {
+			E = E_3;
+		} else {
+			E = E_LT600;
+		}
+		
+		//AFB_LT600
+		//mm
+		let AFB_LT600 = 10**((table3Value.k1 + table3Value.k2 * Math.log10(G) + (table3Value.k3 * I_arc600) / (table3Value.k4 * I_bf**7 +
+		table3Value.k5 * I_bf**6 + table3Value.k6 * I_bf**5 + table3Value.k7 * I_bf**4 + table3Value.k8 * I_bf**3 + table3Value.k9 * I_bf**2 +
+		table3Value.k10 * I_bf) + table3Value.k11 * Math.log10(I_bf) + table3Value.k13 * Math.log10(I_arc) + Math.log10(1/CF) -
+		Math.log10(20/T)) / -(table3Value.k12));
+		
+		
+		//AFB_600
+		//mm
+		//const table3Value = table3.find(item => item.ec === ec)
+		let AFB_600 = 10**((table3Value.k1 + table3Value.k2 * Math.log10(G) + (table3Value.k3 * I_arc600) / (table3Value.k4 * I_bf**7 +
+		table3Value.k5 * I_bf**6 + table3Value.k6 * I_bf**5 + table3Value.k7 * I_bf**4 + table3Value.k8 * I_bf**3 + table3Value.k9 * I_bf**2 +
+		table3Value.k10 * I_bf) + table3Value.k11 * Math.log10(I_bf) + table3Value.k13 * Math.log10(I_arc600) + Math.log10(1/CF) -
+		Math.log10(20/T)) / -(table3Value.k12));
+		
+		//AFB_2700
+		//mm
+		let AFB_2700 = 10**((table4Value.k1 + table4Value.k2 * Math.log10(G) + (table4Value.k3 * I_arc2700) / (table4Value.k4 * I_bf**7 +
+		table4Value.k5 * I_bf**6 + table4Value.k6 * I_bf**5 + table4Value.k7 * I_bf**4 + table4Value.k8 * I_bf**3 + table4Value.k9 * I_bf**2 +
+		table4Value.k10 * I_bf) + table4Value.k11 * Math.log10(I_bf) + table4Value.k13 * Math.log10(I_arc2700) + Math.log10(1/CF) -
+		Math.log10(20/T)) / -(table4Value.k12));
+		
+		//AFB_14300
+		//mm
+		let AFB_14300 = 10**((table5Value.k1 + table5Value.k2 * Math.log10(G) + (table5Value.k3 * I_arc14300) / (table5Value.k4 * I_bf**7 +
+		table5Value.k5 * I_bf**6 + table5Value.k6 * I_bf**5 + table5Value.k7 * I_bf**4 + table5Value.k8 * I_bf**3 + table5Value.k9 * I_bf**2 +
+		table5Value.k10 * I_bf) + table5Value.k11 * Math.log10(I_bf) + table5Value.k13 * Math.log10(I_arc14300) + Math.log10(1/CF) -
+		Math.log10(20/T)) / -(table5Value.k12));
+		
+		//AFB_1
+		//mm
+		let AFB_1 = ((AFB_2700 - AFB_600) / 2.1) * ((sec_v/1000) - 2.7) + AFB_2700;
+		
+		//AFB_2
+		//mm
+		let AFB_2 = ((AFB_14300 - AFB_2700) / 11.6) * ((sec_v/1000) - 14.3) + AFB_14300;
+		
+		//AFB_3
+		//mm
+		let AFB_3 = ((AFB_1 * (2.7 - sec_v/1000)) / 2.1) + ((AFB_2 * (sec_v/1000 - 0.6)) / 2.1);
+		
+		//AFB
+		//mm
+		let AFB = 0;
+		if (sec_v > 2700) {
+			AFB = AFB_2;
+		} else if (sec_v > 600 ) {
+			AFB = AFB_3;
+		} else {
+			AFB = AFB_LT600;
+		}
+		
+		//I_bf_out_of_bounds
+		//Min I_bf @ <= 600v	0.500	kA
+		//Max I_bf @ <= 600v	106.000	kA
+		//Min I_bf @ > 	600v	0.200	kA
+		//Max I_bf @ > 	600v	65.000	kA
+		let I_bf_out_of_bounds = false;
+		if (sec_v <= 600) {
+			if (I_bf < 0.5 || I_bf > 106.0) {
+				I_bf_out_of_bounds = true;
+			} 
+		}
+		else {
+			if (I_bf < 0.2 || I_bf > 65.0) {
+				I_bf_out_of_bounds = true;
+			}
+		}
+		
+		//E_cal
+		//cal/cm2
+		let E_cal = E * 0.2390057356;
+	
+		//AFB_in
+		//in
+		let AFB_in = AFB * 0.03937;
+		
+		//AFB_ftin
+		//feet and inches
+		let AFB_feet = Math.floor(AFB_in / 12);
+		let AFB_remainingInches = (AFB_in - (AFB_feet * 12)).toFixed(0);
+		let AFB_ftin = `${AFB_feet}ft ${AFB_remainingInches}in`;
+	
+		//Update screen with calculated output
+		document.getElementById("E_cal").innerHTML = `Incident Energy: ${formatNumber(E_cal)} cal/cm2`;
+		document.getElementById("AFB_ftin").innerHTML = `Arc Flash Boundry: ${AFB_ftin}`;
+		document.getElementById("Etype").innerHTML = `Etype: ${Etype}`; 
+		document.getElementById("A").innerHTML = `A: ${A}`; 
+		document.getElementById("B").innerHTML = `B: ${B}`;
+		document.getElementById("width_capped").innerHTML = `width_capped: ${formatNumber(width_capped)} mm`;
+		document.getElementById("height_capped").innerHTML = `height_capped: ${formatNumber(height_capped)} mm`;
+		document.getElementById("EQ_11").innerHTML = `EQ_11: ${formatNumber(EQ_11)}`; 
+		document.getElementById("EQ_12").innerHTML = `EQ_12: ${formatNumber(EQ_12)}`; 
+		document.getElementById("EQ_11_capped").innerHTML = `EQ_11_capped: ${formatNumber(EQ_11_capped)}`; 
+		document.getElementById("EQ_12_capped").innerHTML = `EQ_12_capped: ${formatNumber(EQ_12_capped)}`; 
+		document.getElementById("width_1").innerHTML = `width_1: ${formatNumber(width_1)} mm`; 
+		document.getElementById("height_1").innerHTML = `height_1: ${formatNumber(height_1)} mm`; 
+		document.getElementById("EES").innerHTML = `EES: ${formatNumber(EES)}`; 
+		document.getElementById("Eq_14").innerHTML = `Eq_14: ${formatNumber(Eq_14)}`; 
+		document.getElementById("Eq_15").innerHTML = `Eq_15: ${formatNumber(Eq_15)}`; 
+		document.getElementById("CF").innerHTML = `CF: ${formatNumber(CF)}`; 
+		document.getElementById("I_arc600").innerHTML = `I_arc600: ${formatNumber(I_arc600)} kA`; 
+		document.getElementById("I_arc2700").innerHTML = `I_arc2700: ${formatNumber(I_arc2700)} kA`; 
+		document.getElementById("I_arc14300").innerHTML = `I_arc14300: ${formatNumber(I_arc14300)} kA`; 
+		document.getElementById("I_arc_LT600").innerHTML = `I_arc_LT600: ${formatNumber(I_arc_LT600)} kA`; 
+		document.getElementById("I_arc_1").innerHTML =`I_arc_1: ${formatNumber(I_arc_1)} kA`; 
+		document.getElementById("I_arc_2").innerHTML = `I_arc_2: ${formatNumber(I_arc_2)} kA`; 
+		document.getElementById("I_arc_3").innerHTML = `I_arc_3: ${formatNumber(I_arc_3)} kA`;
+		document.getElementById("I_arc").innerHTML = `I_arc: ${formatNumber(I_arc)} kA`; 
+		document.getElementById("E_LT600").innerHTML = `E_LT600: ${formatNumber(E_LT600)} J/cm2`;
+		document.getElementById("E_600").innerHTML = `E_600: ${formatNumber(E_600)} J/cm2`; 
+		document.getElementById("E_2700").innerHTML = `E_2700: ${formatNumber(E_2700)} J/cm2`; 
+		document.getElementById("E_14300").innerHTML = `E_14300: ${formatNumber(E_14300)} J/cm2`; 
+		document.getElementById("E_1").innerHTML = `E_1: ${formatNumber(E_1)} J/cm2`; 
+		document.getElementById("E_2").innerHTML = `E_2: ${formatNumber(E_2)} J/cm2`; 
+		document.getElementById("E_3").innerHTML = `E_3: ${formatNumber(E_3)} J/cm2`; 
+		document.getElementById("E").innerHTML = `E: ${formatNumber(E)} J/cm2`; 
+		document.getElementById("AFB_LT600").innerHTML = `AFB_LT600: ${formatNumber(AFB_LT600)} mm`; 
+		document.getElementById("AFB_600").innerHTML = `AFB_600: ${formatNumber(AFB_600)} mm`; 
+		document.getElementById("AFB_2700").innerHTML = `AFB_2700: ${formatNumber(AFB_2700)} mm`; 
+		document.getElementById("AFB_14300").innerHTML = `AFB_14300: ${formatNumber(AFB_14300)} mm`; 
+		document.getElementById("AFB_1").innerHTML = `AFB_1: ${formatNumber(AFB_1)} mm`; 
+		document.getElementById("AFB_2").innerHTML = `AFB_2: ${formatNumber(AFB_2)} mm`; 
+		document.getElementById("AFB_3").innerHTML = `AFB_3: ${formatNumber(AFB_3)} mm`; 
+		document.getElementById("AFB").innerHTML = `AFB: ${formatNumber(AFB)} mm`; 
+		document.getElementById("AFB_in").innerHTML = `AFB: ${formatNumber(AFB_in)} in`;
+		document.getElementById("I_bf_out_of_bounds").innerHTML = `Error: ${I_bf_out_of_bounds}`; 
+		
+		//Validate inputs and Show Errors
+		let containsError = false;
+		if (sec_v < 208 || sec_v > 15000 || isNaN(document.getElementById("sec_v").value) || isNaN(sec_v)){
+			document.getElementById('volt_error').style.display = '';
+			document.getElementById('sec_v').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('volt_error').style.display = 'none';
+			document.getElementById('sec_v').style.borderColor = 'black';
+		}
+		
+		if (I_bf_out_of_bounds === true || isNaN(document.getElementById("I_bf").value) || I_bf <= 0 || isNaN(I_bf)){
+			document.getElementById('I_bf_error').style.display = '';
+			document.getElementById('I_bf').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('I_bf_error').style.display = 'none';
+			document.getElementById('I_bf').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("G").value) || G <= 0 || isNaN(G)){
+			document.getElementById('G').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('G').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("D").value) || D <= 0 || isNaN(D)){
+			document.getElementById('D').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('D').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("width").value) || width <= 0 || isNaN(width)){
+			document.getElementById('width').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('width').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("height").value) || height <= 0 || isNaN(height)){
+			document.getElementById('height').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('height').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("depth").value) || depth <= 0 || isNaN(depth)){
+			document.getElementById('depth').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('depth').style.borderColor = 'black';
+		}
+		if (isNaN(document.getElementById("T").value) || T <= 0 || isNaN(T)){
+			document.getElementById('T').style.borderColor = 'red';
+			containsError = true;
+		} else {
+			document.getElementById('T').style.borderColor = 'black';
+		}
+		if (containsError) {
+			document.getElementById('error').style.display = '';
+			document.getElementById('results').style.display = 'none';
+			document.getElementById('stepsBtn').style.display = 'none';
+			document.getElementById('stepsBtn').value = "Show Steps"
+			document.getElementById('steps').style.display = 'none';
+		} else {
+			document.getElementById('error').style.display = 'none';
+			document.getElementById('results').style.display = '';
+			document.getElementById('stepsBtn').style.display = '';
+		}
+		
+		
+	} //end of calculate() function
+	
+	
+	
+	//Data Tables from IEEE 1584-2018
+	const table1 = [
+		{	"id": "600VCB", "k1": -0.04287, "k2": 1.035, "k3": -0.083, "k4": 0, "k5": 0, "k6": -4.783E-09, "k7": 0.000001962, "k8": -0.000229, "k9": 0.003141, "k10": 1.092}, 
+		{	"id": "2700VCB", "k1": 0.0065, "k2": 1.001, "k3": -0.024, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729}, 
+		{	"id": "14300VCB", "k1": 0.005795, "k2": 1.015, "k3": -0.011, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729}, 
+		{	"id": "600VCBB", "k1": -0.017432, "k2": 0.98, "k3": -0.05, "k4": 0, "k5": 0, "k6": -5.767E-09, "k7": 0.000002524, "k8": -0.00034, "k9": 0.01187, "k10": 1.013}, 
+		{	"id": "2700VCBB", "k1": 0.002823, "k2": 0.995, "k3": -0.0125, "k4": 0,	"k5": -9.204E-11, "k6": 2.901E-08, "k7": -0.000003262, "k8": 0.0001569, "k9": -0.004003, "k10": 0.9825}, 
+		{	"id": "14300VCBB", "k1": 0.014827, "k2": 1.01, "k3": -0.01, "k4": 0, "k5": -9.204E-11, "k6": 2.901E-08, "k7": -0.000003262, "k8": 0.0001569, "k9": -0.004003, "k10": 0.9825}, 
+		{	"id": "600HCB", "k1": 0.054922, "k2": 0.988, "k3": -0.11, "k4": 0, "k5": 0, "k6": -5.382E-09, "k7": 0.000002316, "k8": -0.000302, "k9": 0.0091, "k10": 0.9725}, 
+		{	"id": "2700HCB", "k1": 0.001011, "k2": 1.003, "k3": -0.0249, "k4": 0, "k5": 0, "k6": 4.859E-10, "k7": -1.814E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9881}, 
+		{	"id": "14300HCB", "k1": 0.008693, "k2": 0.999, "k3": -0.02, "k4": 0, "k5": -5.043E-11, "k6": 2.233E-08, "k7": -0.000003046, "k8": 0.000116, "k9": -0.001145, "k10": 0.9839}, 
+		{	"id": "600VOA", "k1": 0.043785, "k2": 1.04, "k3": -0.18, "k4": 0, "k5": 0, "k6": -4.783E-09, "k7": 0.000001962, "k8": -0.000229, "k9": 0.003141, "k10": 1.092}, 
+		{	"id": "2700VOA", "k1": -0.02395, "k2": 1.006, "k3": -0.0188, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729}, 
+		{	"id": "14300VOA", "k1": 0.005371, "k2": 1.0102, "k3": -0.029, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729}, 
+		{	"id": "600HOA", "k1": 0.111147, "k2": 1.008, "k3": -0.24, "k4": 0, "k5": 0, "k6": -3.895E-09, "k7": 0.000001641, "k8": -0.000197, "k9": 0.002615, "k10": 1.1}, 
+		{	"id": "2700HOA", "k1": 0.000435, "k2": 1.006, "k3": -0.038, "k4": 0, "k5": 0, "k6": 7.859E-10, "k7": -1.914E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9981}, 
+		{	"id": "14300HOA", "k1": 0.000904, "k2": 0.999, "k3": -0.02, "k4": 0, "k5": 0, "k6": 7.859E-10, "k7": -1.914E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9981}
+	]
+	const table3 = [
+		{"ec": "VCB", "k1": 0.753364, "k2": 0.566, "k3": 1.752636, "k4": 0, "k5": 0, "k6": -4.783E-09, "k7": 0.000001962, "k8": -0.000229, "k9": 0.003141, "k10": 1.092, "k11": 0, "k12": -1.598, "k13": 0.957}, 
+		{"ec": "VCBB", "k1": 3.068459, "k2": 0.26, "k3": -0.098107, "k4": 0, "k5": 0, "k6": -5.767E-09, "k7": 0.000002524, "k8": -0.00034, "k9": 0.01187, "k10": 1.013, "k11": -0.06, "k12": -1.809, "k13": 1.19}, 
+		{"ec": "HCB", "k1": 4.073745, "k2": 0.344, "k3": -0.370259, "k4": 0, "k5": 0, "k6": -5.382E-09, "k7": 0.000002316, "k8": -0.000302, "k9": 0.0091, "k10": 0.9725, "k11": 0, "k12": -2.03, "k13": 1.036}, 
+		{"ec": "VOA", "k1": 0.679294, "k2": 0.746, "k3": 1.222636, "k4": 0, "k5": 0, "k6": -4.783E-09, "k7": 0.000001962, "k8": -0.000229, "k9": 0.003141, "k10": 1.092, "k11": 0, "k12": -1.598, "k13": 0.997}, 
+		{"ec": "HOA", "k1": 3.470417, "k2": 0.465, "k3": -0.261863, "k4": 0, "k5": 0, "k6": -3.895E-09, "k7": 0.000001641, "k8": -0.000197, "k9": 0.002615, "k10": 1.1, "k11": 0, "k12": -1.99, "k13": 1.04}
+	]
+	const table4 = [
+		{"ec": "VCB", "k1": 2.40021, "k2": 0.165, "k3": 0.354202, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729, "k11": 0, "k12": -1.569, "k13": 0.9778}, 
+		{"ec": "VCBB", "k1": 3.870592, "k2": 0.185, "k3": -0.736618, "k4": 0, "k5": -9.204E-11, "k6": 2.901E-08, "k7": -0.000003262, "k8": 0.0001569, "k9": -0.004003, "k10": 0.9825, "k11": 0, "k12": -1.742, "k13": 1.09}, 
+		{"ec": "HCB", "k1": 3.486391, "k2": 0.177, "k3": -0.193101, "k4": 0, "k5": 0, "k6": 4.859E-10, "k7": -1.814E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9881, "k11": 0.027, "k12": -1.723, "k13": 1.055}, 
+		{"ec": "VOA", "k1": 3.880724, "k2": 0.105, "k3": -1.906033, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729, "k11": 0, "k12": -1.515, "k13": 1.115}, 
+		{"ec": "HOA", "k1": 3.616266, "k2": 0.149, "k3": -0.761561, "k4": 0, "k5": 0, "k6": 7.859E-10, "k7": -1.914E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9981, "k11": 0, "k12": -1.639, "k13": 1.078}
+	]
+	const table5 = [
+		{"ec": "VCB", "k1": 3.825917, "k2": 0.11, "k3": -0.999749, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729, "k11": 0, "k12": -1.568, "k13": 0.99}, 
+		{"ec": "VCBB", "k1": 3.644309, "k2": 0.215, "k3": -0.585522, "k4": 0, "k5": -9.204E-11, "k6": 2.901E-08, "k7": -0.000003262, "k8": 0.0001569, "k9": -0.004003, "k10": 0.9825, "k11": 0, "k12": -1.677, "k13": 1.06}, 
+		{"ec": "HCB", "k1": 3.044516, "k2": 0.125, "k3": 0.245106, "k4": 0, "k5": -5.043E-11, "k6": 2.233E-08, "k7": -0.000003046, "k8": 0.000116, "k9": -0.001145, "k10": 0.9839, "k11": 0, "k12": -1.655, "k13": 1.084}, 
+		{"ec": "VOA", "k1": 3.405454, "k2": 0.12, "k3": -0.93245, "k4": -1.557E-12, "k5": 4.556E-10, "k6": -4.186E-08, "k7": 8.346E-07, "k8": 0.00005482, "k9": -0.003191, "k10": 0.9729, "k11": 0, "k12": -1.534, "k13": 0.979}, 
+		{"ec": "HOA", "k1": 2.04049, "k2": 0.177, "k3": 1.005092, "k4": 0, "k5": 0, "k6": 7.859E-10, "k7": -1.914E-07, "k8": -0.000009128, "k9": -0.0007, "k10": 0.9981, "k11": -0.05, "k12": -1.633, "k13": 1.151}
+	]
+	const table7Typical = [
+		{ ec: "VCB", b1: -0.000302, b2: 0.03441, b3: 0.4325},
+		{ ec: "VCBB", b1: -0.0002976, b2: 0.032, b3: 0.479},
+		{ ec: "HCB", b1: -0.0001923, b2: 0.01935, b3: 0.6899}
+	]
+	const table7Shallow = [
+		{ ec: "VCB", b1: 0.002222, b2: -0.02556, b3: 0.6222},
+		{ ec: "VCBB", b1: -0.002778, b2: 0.1194, b3: -0.2778},
+		{ ec: "HCB", b1: -0.0005556, b2: 0.03722, b3: 0.4778}
+	]
+
+	//Run calculate() on page load
+	calculate();
+		
+		</script>
+	</body>
+</html>
