@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "jest": "^29.6.1"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "fast-csv": "^4.3.6"
+  }
+}
