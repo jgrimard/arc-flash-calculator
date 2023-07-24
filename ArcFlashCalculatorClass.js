@@ -1,14 +1,48 @@
-//Class for Arc Flash Calculator
-//sec_v: Secondary Voltage (V)
-//I_bf: Bolted Fault Current (kA)
-//ec: Electrode Configuration (VCB, VCBB, HCB, VOA, HOA)
-//G: Conductor Gap (mm)
-//D: Working Distance (in)
-//width: Box Width (in)
-//height: Box Height (in)
-//depth: Box Depth (in)
-//T: Arc Time (ms)
+// IEEE 1584-2018 BASED ARC FLASH CALCULATOR
+// TESTED WITH 144,000 TEST CASES FROM IEEE 1584-2018 OFFICIAL EXCEL SPREADSHEET
+// Jason Grimard
+// Version 1.0.2
 
+// MIT License
+
+// Copyright (c) [2023] [Jason Grimard]
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+/**
+ * ArcFlashCalculator class
+    * @class
+    * @param {number} sec_v - Secondary Voltage (V)
+    * @param {number} I_bf - Bolted Fault Current (kA)
+    * @param {string} ec - Electrode Configuration (VCB, VCBB, HCB, VOA, HOA)
+    * @param {number} G - Conductor Gap (mm)
+    * @param {number} D_in - Working Distance (in)
+    * @param {number} width_in - Box Width (in)
+    * @param {number} height_in - Box Height (in)
+    * @param {number} depth_in - Box Depth (in)
+    * @param {number} T - Arc Time (ms)
+    * @throws Will throw an error if any of the inputs are invalid
+    * @example
+    * let arcFlashCalculator = new ArcFlashCalculator(208, 20, "VCB", 25, 18, 18, 18, 18, 45);
+    * console.log(arcFlashCalculator.E_cal); //cal/cm2
+    * console.log(arcFlashCalculator.AFB_ftin); //Arc Flash Boundary in feet and inches
+ */
 class ArcFlashCalculator {
     constructor(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T) {
         this.sec_v = sec_v;
