@@ -287,5 +287,126 @@ describe('Arc Flash Calculator Class', () => {
         }).toThrow('T must be > 0');
     });
 
+    // Test non text values for sec_v, I_bf, G, D_in, width_in, height_in, depth_in, T
+    test('should throw error if sec_v is not a number', () => {
+        const sec_v = '';
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);
+            console.log(calc.sec_v);      
+        }).toThrow('sec_v must be >= 208 and <= 15000');
+    });
+
+    test('should throw error if I_bf is not a number', () => {
+        const sec_v = 480;
+        const I_bf = '';
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);        
+        }).toThrow('I_bf must be in ranges: 208V-600V: 0.5Ka to 106kA OR 601V-15000V: 0.2kA to 65kA');
+    });
+
+    test('should throw error if G is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = '';
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);        
+        }).toThrow('G must be > 0');
+    });
+
+    test('should throw error if D_in is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = '';
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);        
+        }).toThrow('D_in must be > 0');
+    });
+
+    test('should throw error if width_in is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = '';
+        const height_in = 20;
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);
+        }).toThrow('width_in must be > 0');
+    });
+
+    test('should throw error if height_in is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = '';
+        const depth_in = 20;
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);
+        }).toThrow('height_in must be > 0');
+    });
+
+    test('should throw error if depth_in is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = '';
+        const T = 5;        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in, depth_in, T);
+        }).toThrow('depth_in must be > 0');
+    });
+
+    test('should throw error if T is not a number', () => {
+        const sec_v = 480;
+        const I_bf = 20;
+        const ec = 'VCB';
+        const G = 50;
+        const D_in = 10;
+        const width_in = 20;
+        const height_in = 20;
+        const depth_in = 20;
+        const T = '';        
+        expect(() => {
+            calc = new arcFlashCalculator(sec_v, I_bf, ec, G, D_in, width_in, height_in , depth_in, T);
+        }).toThrow('T must be > 0');
+    });
     
 }); //end describe

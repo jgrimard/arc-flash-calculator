@@ -32,37 +32,34 @@ class ArcFlashCalculator {
         this.T = parseFloat(this.T);
 
         // validate inputs
-        if (this.sec_v < 208 || this.sec_v > 15000) {
+        if (this.sec_v < 208 || this.sec_v > 15000 || isNaN(this.sec_v)) {
             throw new Error('sec_v must be >= 208 and <= 15000');
         }
         if (this.I_bf <= 0 || (this.sec_v > 600 && this.I_bf > 65) || (this.sec_v <= 600 && this.I_bf > 106)
-            || (this.sec_v <= 600 && this.I_bf < 0.5) || (this.sec_v > 600 && this.I_bf < 0.2)) {
+            || (this.sec_v <= 600 && this.I_bf < 0.5) || (this.sec_v > 600 && this.I_bf < 0.2) || isNaN(this.I_bf)) {
             throw new Error('I_bf must be in ranges: 208V-600V: 0.5Ka to 106kA OR 601V-15000V: 0.2kA to 65kA');
         }
         if (this.ec !== 'VCB' && this.ec !== 'VCBB' && this.ec !== 'HCB' && this.ec !== 'VOA' && this.ec !== 'HOA') {
             throw new Error('ec must be one of VCB, VCBB, HCB, VOA, HOA');
         }
-        if (this.G <= 0) {
+        if (this.G <= 0 || isNaN(this.G)) {
             throw new Error('G must be > 0');
         }
-        if (this.D_in <= 0) {
+        if (this.D_in <= 0 || isNaN(this.D_in)) {
             throw new Error('D_in must be > 0');
         }
-        if (this.width_in <= 0) {
+        if (this.width_in <= 0 || isNaN(this.width_in)) {
             throw new Error('width_in must be > 0');
         }
-        if (this.height_in <= 0) {
+        if (this.height_in <= 0 || isNaN(this.height_in)) {
             throw new Error('height_in must be > 0');
         }
-        if (this.depth_in <= 0) {
+        if (this.depth_in <= 0 || isNaN(this.depth_in)) {
             throw new Error('depth_in must be > 0');
         }
-        if (this.T <= 0) {
+        if (this.T <= 0 || isNaN(this.T)) {
             throw new Error('T must be > 0');
         }
-
-
-
 
         this.calculate();
     }
