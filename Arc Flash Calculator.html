@@ -152,7 +152,7 @@ SOFTWARE.
 				
 				<div class="results" id="results">
 					<p id="E_cal">Incident Energy:</p>
-					<p id="AFB_ftin">Arc Flash Boundry:</p>
+					<p id="AFB_ftin">Arc Flash Boundary:</p>
 				</div>
 
 				<input type="button" value="Show Steps" id="stepsBtn">
@@ -372,7 +372,7 @@ SOFTWARE.
 		
 		//Update screen with calculated output
 		document.getElementById("E_cal").innerHTML = `Incident Energy: ${formatNumber(arcFlashCalculator.E_cal)} cal/cm2`;
-		document.getElementById("AFB_ftin").innerHTML = `Arc Flash Boundry: ${arcFlashCalculator.AFB_ftin}`;
+		document.getElementById("AFB_ftin").innerHTML = `Arc Flash Boundary: ${arcFlashCalculator.AFB_ftin}`;
 		document.getElementById("Etype").innerHTML = `Etype: ${arcFlashCalculator.Etype}`; 
 		document.getElementById("A").innerHTML = `A: ${arcFlashCalculator.A}`; 
 		document.getElementById("B").innerHTML = `B: ${arcFlashCalculator.B}`;
