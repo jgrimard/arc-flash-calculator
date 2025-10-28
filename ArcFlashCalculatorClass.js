@@ -157,7 +157,7 @@ class ArcFlashCalculator {
 
         //EQ_11
         this.EQ_11 = (660.4 + (this.width - 660.4) * (this.sec_v / 1000 + this.A) / this.B) * 25.4 ** -1;
-        if (this.c === "VOA" || this.ec === "HOA") {
+        if (this.ec === "VOA" || this.ec === "HOA") {
             this.EQ_11 = 0;
         }
 
